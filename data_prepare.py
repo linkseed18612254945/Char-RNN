@@ -64,12 +64,15 @@ def build_lstm(lstm_size, num_layers, batch_size, keep_prob):
     :param keep_prob:
     :return:
     """
-    lstm = tf.nn.rnn_cell.BasicLSTMCell(lstm_size)
-    drop = tf.nn.rnn_cell.DropoutWrapper(lstm, output_keep_prob=keep_prob)
 
-    cell = tf.nn.rnn_cell.MultiRNNCell([lstm for _ in range(num_layers)])
+    def get_a_cell(lstm_size, keep_prob):
+        lstm = tf.nn.rnn_cell.BasicLSTMCell(lstm_size)
+        drop = tf.nn.rnn_cell.DropoutWrapper(lstm, output_keep_prob=keep_prob)
+        return lstm
+
+    cell = tf.nn.rnn_cell.MultiRNNCell([get_a_cell(lstm_size, keep_prob) for _ in range(num_layers)])
     initial_state = cell.zero_state(batch_size, dtype=tf.float32)
-    return lstm, cell, initial_state
+    return cell, initial_state
 
 
 def build_output(lstm_output, in_size, out_size):
@@ -88,7 +91,7 @@ if __name__ == '__main__':
     num_seqs = 5
     num_steps = 6
     lstm_size = 64
-    num_layers = 1
+    num_layers = 2
 
 
     with open('./test_data') as f:
@@ -100,7 +103,7 @@ if __name__ == '__main__':
     batch_data = batch_generator_other(text_arr, num_seqs, num_steps)
 
     inputs, targets, keep_prob = build_inputs(num_seqs, num_steps)
-    lstm, cell, initial_state = build_lstm(lstm_size, num_layers, num_seqs, keep_prob)
+    cell, initial_state = build_lstm(lstm_size, num_layers, num_seqs, keep_prob)
     x_one_hot = tf.one_hot(inputs, out_size)
     outputs, state = tf.nn.dynamic_rnn(cell, x_one_hot, initial_state=initial_state)
 
@@ -131,5 +134,6 @@ if __name__ == '__main__':
     x_batch, y_batch = batch[0], batch[1]
     feed = {inputs: x_batch, targets: y_batch}
     sess.run(init)
-    sess.run(outputs, feed_dict=feed)
+    res = sess.run(outputs, feed_dict=feed)
+    res2 = sess.run(seq_output, feed_dict=feed)
 
