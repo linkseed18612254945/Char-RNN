@@ -1,5 +1,5 @@
 import tensorflow as tf
-import read_data
+import util
 from model import CharRNN
 import os
 
@@ -23,10 +23,12 @@ def main(_):
     model_path = os.path.join('model', FLAGS.name)
     if not os.path.exists(model_path):
         os.makedirs(model_path)
-    tc = read_data.TextConverter(FLAGS.input_file_path, FLAGS.max_vocab)
+    with open(FLAGS.input_file_path, 'r', encoding='utf-8') as f:
+        text = f.read()
+    tc = util.TextConverter(text, FLAGS.max_vocab)
+    tc.save_vocab(os.path.join('vocab', FLAGS.name))
     output_size = tc.vocab_size
-    batch_generator = tc.batch_generator(FLAGS.batch_size, FLAGS.seq_size)
-
+    batch_generator = util.batch_generator(tc.text_to_arr(text), FLAGS.batch_size, FLAGS.seq_size)
     model = CharRNN(output_size=output_size,
                     batch_size=FLAGS.batch_size,
                     seq_size=FLAGS.seq_size,

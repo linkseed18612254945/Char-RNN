@@ -71,7 +71,7 @@ def build_lstm(lstm_size, num_layers, batch_size, keep_prob):
         return lstm
 
     cell = tf.nn.rnn_cell.MultiRNNCell([get_a_cell(lstm_size, keep_prob) for _ in range(num_layers)])
-    initial_state = cell.zero_state(batch_size, dtype=tf.float32)
+    initial_state = cell.zero_state(num_seqs, dtype=tf.float32)
     return cell, initial_state
 
 
@@ -125,6 +125,8 @@ if __name__ == '__main__':
     # optimizer
     optimizer = tf.train.GradientDescentOptimizer(0.001).minimize(loss_mean)
 
+
+
     init = tf.global_variables_initializer()
 
 
@@ -132,8 +134,11 @@ if __name__ == '__main__':
     sess = tf.Session()
     batch = batch_data.__next__()
     x_batch, y_batch = batch[0], batch[1]
-    feed = {inputs: x_batch, targets: y_batch}
+    zero_init = sess.run(cell.zero_state(num_seqs, dtype=tf.float32))
+    feed = {inputs: x_batch, targets: y_batch,
+            initial_state: zero_init}
     sess.run(init)
-    res = sess.run(outputs, feed_dict=feed)
-    res2 = sess.run(seq_output, feed_dict=feed)
+   #res = sess.run(outputs, feed_dict=feed)
+
+
 
